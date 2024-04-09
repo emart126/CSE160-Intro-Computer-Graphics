@@ -13,6 +13,10 @@ function main() {
   // Draw canvas
   ctx.fillStyle = 'rgba(0, 0, 0, 1.0)';            // Set canvas color to black
   ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill a rectangle with the color
+
+  // Draw red vector example
+  let V1 = new Vector3([2.25, 2.25, 0]);
+  drawVector(V1, "red");
 }
 
 // Draw a vector given a vector and a color
