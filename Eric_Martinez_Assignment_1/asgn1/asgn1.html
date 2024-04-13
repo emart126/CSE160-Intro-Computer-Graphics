@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Draw a point</title>
+
+    <style>
+      #ref {
+        width: 400px;
+        height: 400px;
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <img src="../lib/reference.jpg" alt="Picture Reference" id="ref">
+
+    <br>
+    <button type="button" id="clearButton">Clear Canvas</button>
+    <p>
+    Drawing Mode:
+    <br>
+    <button type="button" id="squareButton">Squares</button>
+    <button type="button" id="triangleButton">Triangles</button>
+    <button type="button" id="circleButton">Circles</button>
+    
+
+    <p>
+    Shape Color:
+    <br>
+    Red <input type="range" min="0" max="100" value="100" class="slider" id="redSlider">
+    Green <input type="range" min="0" max="100" value="100" class="slider" id="greenSlider">
+    Blue <input type="range" min="0" max="100" value="100" class="slider" id="blueSlider">
+    
+    <br><br>
+    Size <input type="range" min="5" max="40" value="0" class="slider" id="sizeSlider">
+    (Circle) Segment Count: <input type="range" min="3" max="50" value="10" class="slider" id="segmentSlider">
+
+    <br><br>
+    <button type="button" id="drawButton">Draw Picture</button>
+    <button type="button" id="hideRefButton">Hide/UnHide Reference</button>
+
+    <br><br>
+    
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Point.js"></script>
+    <script src="asgn1.js"></script>
+    <script src="drawing.js"></script>
+  </body>
+</html>
