@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Clank</title>
+
+    <style>
+      @font-face { font-family: rAndCFont; src: url('../lib/font/rg-future-italic.otf'); } 
+      .cFont {
+         font-family: rAndCFont;
+         font-size: 150px;
+         color: #000000;
+      }
+      #overlay {
+        color: #ffffff;
+        position: absolute;
+        z-index:100;
+        left: 520px;
+        top:640px;
+      }
+
+      #ref {
+        width: 500px;
+        height: 500px;
+        display: none;
+      }
+      #Settings_Panel {
+        float: left;
+        width: 525px;
+        height: 1000px;
+      }
+      #Controls {
+        width: 100%;
+      }
+      .slider {
+        width: 200px;
+        height: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+
+  <body onload="main()" style="background-color:#a1a29c;">
+    <div>
+      <div, id="Settings_Panel">
+        <canvas id="webgl" width="500" height="500">
+        Please use a browser that supports "canvas"
+        </canvas>
+
+        <p id="fpsElem">FPS: </p>
+        Settings:<br>
+        Zoom: <input type="range" class="slider" min="5" max="200" value="100" class="slider" id="zoomButton">
+        <br>
+        <button type="button" id="cameraReset">Reset Camera</button>
+        <br>
+        Drag the canvas to move the camera :<br>
+        Camera Yaw: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderX"><br>
+        Camera Pitch: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderY"><br>
+        Camera Roll: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderZ">
+        <br>
+        <button type="button" id="posReset">Reset Position</button>
+        <br>
+        X Pos: <input type="range" class="slider" min="-100" max="100" value="0" class="slider" id="posX"><br>
+        Y Pos: <input type="range" class="slider" min="-100" max="100" value="0" class="slider" id="posY"><br>
+        Z Pos: <input type="range" class="slider" min="-100" max="100" value="0" class="slider" id="posZ">
+        <br><br>
+        Idle Animation:
+        <button type="button" id="idleOn">On</button>
+        <button type="button" id="idleOff">Off</button>
+        <br>
+        Run Animation:
+        <button type="button" id="runOn">On</button>
+        <button type="button" id="runOff">Off</button>
+        Run Speed: <input type="range" class="slider" min="2" max="20" value="9" class="slider" id="runSpeed">
+        <br>
+        Talk Animation:
+        <button type="button" id="speakOn">On</button>
+        <button type="button" id="speakOff">Off</button>
+
+        <br><br>
+        Shift+Click to Poke!
+
+        
+      </div>
+
+      <div, id="Controls">
+        Head ====================================================================================== <br>
+        X <input type="range" class="slider" min="-70" max="70" value="0" class="slider" id="headZ"> 
+        Y <input type="range" class="slider" min="-35" max="45" value="0" class="slider" id="headX">
+        Z <input type="range" class="slider" min="-15" max="15" value="0" class="slider" id="headY">
+
+        <br><br>
+        Face ====================================================================================== <br>
+        Left Eye:&nbsp;&nbsp;
+        Eyebrow <input type="range" class="slider" min="0" max="5" value="0" class="slider" id="leftEyeHight">
+        Upper Eyelid <input type="range" class="slider" min="0" max="8" value="0" class="slider" id="leftUpperEyeScale">
+        Lower Eyelid <input type="range" class="slider" min="0" max="8" value="0" class="slider" id="leftLowerEyeScale"> <br>
+
+        Right Eye: 
+        Eyebrow <input type="range" class="slider" min="0" max="5" value="0" class="slider" id="rightEyeHight">
+        Upper Eyelid <input type="range" class="slider" min="0" max="8" value="0" class="slider" id="rightUpperEyeScale">
+        Lower Eyelid <input type="range" class="slider" min="0" max="8" value="0" class="slider" id="rightLowerEyeScale"> <br>
+
+        Mouth:
+        X <input type="range" class="slider" min="-25" max="0" value="0" class="slider" id="mouthX"> 
+      
+        <br><br>
+        Torso ===================================================================================== <br>
+        Pelvis:
+        X <input type="range" class="slider" min="-45" max="45" value="0" class="slider" id="pelvisX">
+
+        <br><br>
+        Arms ====================================================================================== <br>
+        Left Arm:<br>
+        Left Bicep:&nbsp;&nbsp;&nbsp;&nbsp;
+        X <input type="range" class="slider" min="-5" max="86" value="0" class="slider" id="leftBicepX">
+        Y <input type="range" class="slider" min="-90" max="90" value="0" class="slider" id="leftBicepY">
+        Z <input type="range" class="slider" min="-5" max="90" value="0" class="slider" id="leftBicepZ"> <br>
+
+        Left Forearm:  
+        Y <input type="range" class="slider" min="0" max="100" value="0" class="slider" id="leftForearmZ"> <br>
+
+        Left Hand:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        X <input type="range" class="slider" min="-85" max="85" value="0" class="slider" id="leftHandX">
+        Y <input type="range" class="slider" min="-85" max="85" value="0" class="slider" id="leftHandY">
+        Z <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="leftHandZ"> <br>
+        Fingers:&nbsp;&nbsp;&nbsp;
+        Pinky <input type="range" class="slider" min="0" max="120" value="0" class="slider" id="leftIndex">
+        Index <input type="range" class="slider" min="0" max="120" value="0" class="slider" id="leftMiddle">
+        Thumb <input type="range" class="slider" min="-135" max="0" value="0" class="slider" id="leftThumb">
+
+        <br><br>
+        Right Arm:<br>
+        Right Bicep:&nbsp;&nbsp;&nbsp;&nbsp;
+        X <input type="range" class="slider" min="-5" max="86" value="0" class="slider" id="rightBicepX">
+        Y <input type="range" class="slider" min="-90" max="90" value="0" class="slider" id="rightBicepY">
+        Z <input type="range" class="slider" min="-5" max="90" value="0" class="slider" id="rightBicepZ"> <br>
+
+        Right Forearm: 
+        Y <input type="range" class="slider" min="0" max="100" value="0" class="slider" id="rightForearmZ"> <br>
+
+        Right Hand:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        X <input type="range" class="slider" min="-85" max="85" value="0" class="slider" id="rightHandX">
+        Y <input type="range" class="slider" min="-85" max="85" value="0" class="slider" id="rightHandY">
+        Z <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="rightHandZ"> <br>
+        Fingers:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Pinky <input type="range" class="slider" min="0" max="120" value="0" class="slider" id="rightIndex">
+        Index <input type="range" class="slider" min="0" max="120" value="0" class="slider" id="rightMiddle">
+        Thumb <input type="range" class="slider" min="-135" max="0" value="0" class="slider" id="rightThumb">
+
+        <br><br>
+        Legs ====================================================================================== <br>
+        Left Thigh:
+        X <input type="range" class="slider" min="0" max="10" value="0" class="slider" id="leftThighX">
+        Y <input type="range" class="slider" min="-65" max="65" value="0" class="slider" id="leftThighY">
+        Z <input type="range" class="slider" min="0" max="45" value="0" class="slider" id="leftThighZ"> <br>
+
+        Left Shin:&nbsp;&nbsp;
+        Y <input type="range" class="slider" min="0" max="100" value="0" class="slider" id="leftShinY"> <br>
+        
+        Left Foot:&nbsp;&nbsp;
+        Y <input type="range" class="slider" min="-45" max="45" value="0" class="slider" id="leftFootY">
+
+        <br><br>
+        Right Thigh:
+        X <input type="range" class="slider" min="0" max="10" value="0" class="slider" id="rightThighX">
+        Y <input type="range" class="slider" min="-65" max="65" value="0" class="slider" id="rightThighY">
+        Z <input type="range" class="slider" min="0" max="45" value="0" class="slider" id="rightThighZ"> <br>
+
+        Right Shin:&nbsp;&nbsp;
+        Y <input type="range" class="slider" min="0" max="100" value="0" class="slider" id="rightShinY"> <br>
+        
+        Right Foot:&nbsp;&nbsp;
+        Y <input type="range" class="slider" min="-35" max="45" value="0" class="slider" id="rightFootY">
+
+        <br><br>
+        <button type="button" id="angleReset">Default Angles</button>
+
+        <br><br>
+        <div id='overlay' class="cFont">Clank</div>
+        <div class="cFont">Clank</div>
+
+      </div>
+    </div>
+
+    <script src="../lib/cuon-matrix-cse160.js"></script>
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="Cylinder.js"></script>
+    <script src="Cube.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Point.js"></script>
+    <script src="asgn2.js"></script>
+    <script src="drawing.js"></script>
+  </body>
+</html>
