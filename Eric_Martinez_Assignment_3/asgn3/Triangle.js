@@ -116,4 +116,48 @@ function drawTriangle3DUV(vertices, uv, vertexBuffer) {
   // === Draw Triangle ===
   gl.drawArrays(gl.TRIANGLES, 0, n);
 }
+
+var g_vBuffer = null;
+function newDrawTriangle3DUV(allVertices) {
+  // Initialize buffer if needed
+  if (g_vBuffer == null) {
+    initializeTriangle3DUV(allVertices.BYTES_PER_ELEMENT);
+  }
+
+  var n = allVertices.length / 8; // The number of vertices
   
+  // Write date into the buffer object
+  gl.bufferData(gl.ARRAY_BUFFER, allVertices, gl.DYNAMIC_DRAW);
+
+  // === Draw Triangle ===
+  gl.drawArrays(gl.TRIANGLES, 0, n);
+}
+
+function initializeTriangle3DUV(FSIZE) {
+  // === Create a buffer object for each vertex ===
+
+  // Create a vertex buffer object
+  g_vBuffer = gl.createBuffer();
+  if (g_vBuffer === null) {
+    g_vBuffer = gl.createBuffer();
+    if (!g_vBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+    }
+  }
+
+  // Bind the buffer object to target
+  gl.bindBuffer(gl.ARRAY_BUFFER, g_vBuffer);
+
+  // === Position attribute ===
+  gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE*8, 0);
+  gl.enableVertexAttribArray(a_Position);
+
+  // === UV attribute ===
+  gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, FSIZE*8, FSIZE*3);
+  gl.enableVertexAttribArray(a_UV);
+
+  // === Color attribute ===
+  gl.vertexAttribPointer(a_Color, 3, gl.FLOAT, false, FSIZE*8, FSIZE*5);
+  gl.enableVertexAttribArray(a_Color);
+}

@@ -119,6 +119,19 @@ class Vector3 {
         m = Math.sqrt(sum);
         return m;
     };
+    
+    
+    /**
+      * Calculate the magnitude (or length) of this vector on the XZ axis.
+      * @return scalar
+      */
+    magnitudeXZ() {
+        let m = 0;
+        let sum = (this.elements[0]*this.elements[0]) + 
+                  (this.elements[2]*this.elements[2]);
+        m = Math.sqrt(sum);
+        return m;
+    };
 
     /**
       * Normalize this vector.

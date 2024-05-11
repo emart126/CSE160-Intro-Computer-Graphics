@@ -5,26 +5,60 @@
     <title>Virtual World</title>
 
     <style>
+      html, body {
+          /* height: 100%; */
+          margin: 10px;
+      }
+      #webgl{
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-style: outset;
+        border-width: 5px;
+      }
+      .panel {
+        float: left;
+        margin: 10px;
+      }
+      .controls {
+        margin: 10px;
+        width: 100%;
+      }
+      .slider {
+        width: 200px;
+        height: 10px;
+        border-radius: 5px;
+      }
     </style>
   </head>
 
-  <body onload="main()">
-    <div>
-      <div, id="Settings_Panel">
-        <canvas id="webgl" width="400" height="400">
-        Please use a browser that supports "canvas"
-        </canvas>
+  <body onload="main()" style="background-color:#a1a29c;">
+      <canvas id="webgl", width="1920", height="1080">
+      Please use a browser that supports "canvas"
+      </canvas>
 
-        <p id="fpsElem">FPS: </p>
-        <button type="button" id="cameraReset">Reset Camera</button>
-        <br>
-        Drag the canvas to move the camera :<br>
-        Camera Yaw: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderX"><br>
-        Camera Pitch: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderY"><br>
-        Camera Roll: <input type="range" class="slider" min="-180" max="180" value="0" class="slider" id="cameraSliderZ">
-        <br>
-      </div>
+    <div class="panel">
+      <p id="fpsElem">FPS: </p>
+      
+      Drag the canvas to move the camera :<br>
+      
+      Mouse Sensitivity: <input type="range" class="slider" min="0" max="10" value="5" class="slider" id="cameraSensitivy">
+      <button type="button" id="cameraSensitivyButton">Reset Sensitivy</button> <br>
+      Mouse Speed: <input type="range" class="slider" min="1" max="10" value="2" class="slider" id="cameraSpeed">
+      <button type="button" id="cameraSpeedButton">Reset Speed</button> <br>
+      
+      <br>
     </div>
+
+  <div class="constrols">
+    <br>
+    <u>Controls:</u><br>
+    WASD - Move Player (forward, left, back, right)<br>
+    QERF - Roate Camera (left, right, up, down)<br>
+    Space / Shift - Fly Up/Down<br>
+    1 / 2 - Place/Break Boxes<br>
+    Esc - Toggle Fullscreen Mode
+  </div>
 
     <script src="../lib/cuon-matrix-cse160.js"></script>
     <script src="../lib/webgl-utils.js"></script>
@@ -35,8 +69,10 @@
     <script src="Circle.js"></script>
     <script src="Triangle.js"></script>
     <script src="Point.js"></script>
+    <script src="World.js"></script>
     <script src="Camera.js"></script>
     <script src="asgn3.js"></script>
+    <script src="Clank.js"></script>
     <script src="drawing.js"></script>
   </body>
 </html>

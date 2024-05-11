@@ -4,7 +4,9 @@ var VSHADER_SOURCE = `
   precision mediump float;
   attribute vec4 a_Position;
   attribute vec2 a_UV;
+  attribute vec4 a_Color;
   varying vec2 v_UV;
+  varying vec4 v_Color;
   uniform mat4 u_ModelMatrix;
   uniform mat4 u_GlobalRotateMatrix;
   uniform mat4 u_ViewMatrix;
@@ -13,22 +15,26 @@ var VSHADER_SOURCE = `
     gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
     //gl_Position = u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
     v_UV = a_UV;
+    v_Color = a_Color;
   }`
 
 // Fragment shader program
 var FSHADER_SOURCE = `
   precision mediump float;
   varying vec2 v_UV;
+  varying vec4 v_Color;
   uniform vec4 u_FragColor;
   uniform sampler2D u_Sampler0;
   uniform sampler2D u_Sampler1;
   uniform sampler2D u_Sampler2;
   uniform int u_whichTexture;
   void main() {
-    if (u_whichTexture == -2) {
-      gl_FragColor = u_FragColor;                 // Use color
+    if (u_whichTexture == -3) {
+      gl_FragColor = u_FragColor;                 // Use Solid color
+    } else if (u_whichTexture == -2) {
+      gl_FragColor = v_Color;                     // Use Shaded color
     } else if (u_whichTexture == -1) {
-      gl_FragColor = vec4(v_UV, 1.0, 1.0);        // Use UV debug color
+      gl_FragColor = vec4(0,0, v_UV);             // Use UV debug color
     } else if (u_whichTexture == 0) {
       gl_FragColor = texture2D(u_Sampler0, v_UV); // Use Floor Texture 
     } else if (u_whichTexture == 1) {
@@ -45,6 +51,7 @@ let canvas;
 let gl;
 let a_Position;
 let a_UV;
+let a_Color;
 let u_FragColor;
 let u_Size;
 let u_ModelMatrix;
@@ -61,9 +68,48 @@ let g_GlobalCameraAngleY = 0;
 let g_GlobalCameraAngleZ = 0;
 let g_currMouseCoords = [0,0];
 
-var g_eye = [0,0,2];
-var g_at = [0,0,0];
-var g_up = [0,1,0];
+var g_Camera = new Camera();
+var g_eye = g_Camera.eye.elements;
+var g_at = g_Camera.at.elements;
+var g_up = g_Camera.up.elements;
+var g_Sensitivity = 5;
+var g_cameraSpeed = 1;
+
+// World Map
+var g_map1 = [
+  [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,0,5],
+  [5,0,0,0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,0,0,0,0,0,0,0,0,0,4,4,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,2.1,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,5],
+  [5,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,4,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,1,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3.2,0,0,5],
+  [5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5],
+  [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5]
+];
 
 // Setup WebGL Environment 
 function setupWebGL() {
@@ -99,6 +145,13 @@ function setupGLSL() {
   a_UV = gl.getAttribLocation(gl.program, 'a_UV');
   if (a_UV < 0) {
     console.log('Failed to get the storage location of a_UV');
+    return;
+  }
+  
+  // Get the storage location of a_Color
+  a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+  if (a_Color < 0) {
+    console.log('Failed to get the storage location of a_Color');
     return;
   }
 
@@ -208,11 +261,11 @@ function sendTextureToTEXTURE(image, gl_texture, u_sample, sampleNum) {
 function addActionsFromHTMLUI() {
   // Settings
 
-  // // Camera
-  document.getElementById("cameraSliderX").addEventListener('input', function() { g_GlobalCameraAngleX = this.value; renderAllShapes(); });
-  document.getElementById("cameraSliderY").addEventListener('input', function() { g_GlobalCameraAngleY = this.value; renderAllShapes(); });
-  document.getElementById("cameraSliderZ").addEventListener('input', function() { g_GlobalCameraAngleZ = this.value; renderAllShapes(); });
-  document.getElementById("cameraReset").addEventListener('mousedown', function() { resetCamera(); renderAllShapes(); })
+  // Camera
+  document.getElementById("cameraSensitivyButton").addEventListener('mousedown', function() { g_Sensitivity = 5; document.getElementById("cameraSensitivy").value = 5; });
+  document.getElementById("cameraSpeedButton").addEventListener('mousedown', function() { g_cameraSpeed = 1; document.getElementById("cameraSpeed").value = 1; });
+  document.getElementById("cameraSensitivy").addEventListener('input', function() { g_Sensitivity = this.value; });
+  document.getElementById("cameraSpeed").addEventListener('input', function() { g_cameraSpeed = this.value; });
 }
 
 function main() {
@@ -246,47 +299,117 @@ function getCurrentMouseCoord(ev) {
   g_currMouseCoords = [ev.clientX, ev.clientY];
 }
 
-function keydownFunc(ev) {
-  if (ev.keyCode == 65) { // A Key
-    g_eye[0] += 0.2;
-  } else if (ev.keyCode == 68)  { // D key
-    g_eye[0] -= 0.2;
-  }
-}
-
 function click(ev) {
-  // Extract coordiantes event and send them to WebGL
+  // Update direction of xy Coords
   let xyCoords = convertCoordsEventToGL(ev);
 
-  // Change camera angle
-  g_GlobalCameraAngleX = g_GlobalCameraAngleX-xyCoords[0]*-360
-  g_GlobalCameraAngleY = g_GlobalCameraAngleY-xyCoords[1]*-360
-  document.getElementById("cameraSliderX").value = g_GlobalCameraAngleX;
-  document.getElementById("cameraSliderY").value = g_GlobalCameraAngleY;
-
-  // Draw all shapes that need to be in canvas
-  renderAllShapes();
+  // Turn Camera based on new xy direction of mouse 
+  if (xyCoords[0] > g_Sensitivity) {
+    for (i = 0; i < g_cameraSpeed/2; i++) {
+      g_Camera.turnRight();
+    }
+  } 
+  else if (xyCoords[0] < -1*g_Sensitivity) {
+    for (i = 0; i < g_cameraSpeed/2; i++) {
+      g_Camera.turnLeft();
+    }
+  }
+  if (xyCoords[1] > g_Sensitivity) {
+    for (i = 0; i < g_cameraSpeed/2; i++) {
+      g_Camera.turnDown();
+    }
+  } 
+  else if (xyCoords[1] < -1*g_Sensitivity) {
+    for (i = 0; i < g_cameraSpeed/2; i++) {
+      g_Camera.turnUp();
+    }
+  }
+  //console.log(xyCoords[0]+", "+xyCoords[1]);
 }
 
-// Extract coordiantes event and send them to WebGL
+// Update direction of xy Coords
 function convertCoordsEventToGL(ev) {
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   let newCoords = [x,y];
-  x = (x - g_currMouseCoords[0]) / canvas.width;
-  y = (y - g_currMouseCoords[1]) / canvas.height;
+  x = (x - g_currMouseCoords[0]) * (1000 / canvas.width);
+  y = (y - g_currMouseCoords[1]) * (1000 / canvas.height);
   g_currMouseCoords = newCoords;
   return([x, y]);
 }
 
-// Reset Camera Angle to default
-function resetCamera() {
-  g_GlobalCameraAngleX = 0;
-  g_GlobalCameraAngleY = 0;
-  g_GlobalCameraAngleZ = 0;
-  document.getElementById("cameraSliderX").value = 0;
-  document.getElementById("cameraSliderY").value = 0;
-  document.getElementById("cameraSliderZ").value = 0;
+// Keybinds
+function keydownFunc(ev) {
+  let keyID = ev.keyCode;
+  switch (keyID) {
+    case 87: // W
+      g_Camera.forward();
+      break;
+    case 65: // A
+      g_Camera.right();
+      break;
+    case 83: // S
+      g_Camera.back();
+      break;
+    case 68: // D
+      g_Camera.left();
+      break;
+    case 32: // Space
+      g_Camera.goUp();
+      break;
+    case 16: // Shift
+      g_Camera.goDown();
+      break;
+    case 81: // Q
+      g_Camera.turnLeft();
+      break;
+    case 69: // E
+      g_Camera.turnRight();
+      break;
+    case 82: // R
+      g_Camera.turnUp();
+      break;
+    case 70: // F
+      g_Camera.turnDown();
+      break;
+    case 27: // ESC
+      toggleFullscreen();
+      break;
+    case 49: // 1 (number key)
+      // Get Block Looking At
+      var blockLookingAt = [Math.round(g_Camera.at.elements[0])+16, g_Camera.at.elements[1], Math.round(g_Camera.at.elements[2])+16];
+      if ((blockLookingAt[0] > 0 && blockLookingAt[0] < 33) && (blockLookingAt[2] > 0 && blockLookingAt[2] < 33)) {
+        let worldY = blockLookingAt[0];
+        let worldX = blockLookingAt[2];
+        if (g_map1[worldY][worldX] < 5) {
+          g_map1[worldY][worldX] += 1;
+        }
+      }
+      break;
+    case 50: // 2 (bunber key)
+      // Get Block Looking At
+      var blockLookingAt = [Math.round(g_Camera.at.elements[0])+16, g_Camera.at.elements[1], Math.round(g_Camera.at.elements[2])+16];
+      if ((blockLookingAt[0] > 0 && blockLookingAt[0] < 33) && (blockLookingAt[2] > 0 && blockLookingAt[2] < 33)) {
+        let worldY = blockLookingAt[0];
+        let worldX = blockLookingAt[2];
+        if (g_map1[worldY][worldX] > 0) {
+          g_map1[worldY][worldX] -= 1;
+        }
+      }
+      break;
+  }
+}
+
+// Fullscreen toggle (ESC key)
+function toggleFullscreen() {
+  var gameWindow = document.getElementById("webgl");
+  if (gameWindow.requestFullscreen) {
+    gameWindow.requestFullscreen();
+  } else if (gameWindow.webkitRequestFullscreen) { /* Safari */
+    gameWindow.webkitRequestFullscreen();
+  } else if (gameWindow.msRequestFullscreen) { /* IE11 */
+    gameWindow.msRequestFullscreen();
+  }
 }
 
 // Creates copy of matrix to give to new limb or extra part,
@@ -302,9 +425,9 @@ function renderAllShapes() {
   // Check the time at the start of this function
   var startTime = performance.now();
 
-  // // Pass the projection matrix
+  // Pass the projection matrix
   var projMat = new Matrix4();
-  projMat.setPerspective(60, canvas.width/canvas.height, .1, 550); // (deg wide, aspect ratio, near plane, far plane)
+  projMat.setPerspective(60, (canvas.width)/(canvas.height), .1, 650); // (deg wide, aspect ratio, near plane, far plane)
   gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
   
   // Pass the view Matrix
@@ -324,41 +447,30 @@ function renderAllShapes() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   // Draw the skybox
-  var skyBox = new Cube();
-  skyBox.color = [120/255, 120/255, 255/255, 1];
+  var skyBox = new Cube([120/255, 120/255, 255/255, 1]);
   skyBox.textureNum = -1;
   skyBox.matrix.translate(-250, -15, -250);
   skyBox.matrix.scale(500, 500, 500);
-  skyBox.render();
+  skyBox.renderFast();
 
   // Draw the floor
-  var groundPlane = new Cube();
-  groundPlane.color = [120/255, 120/255, 255/255, 1];
+  var groundPlane = new Cube([120/255, 120/255, 255/255, 1]);
   groundPlane.textureNum = 0;
-  groundPlane.matrix.translate(-50, -1, -50);
+  groundPlane.matrix.translate(-50, -25/100, -50);
   groundPlane.matrix.scale(100, 0, 100);
-  groundPlane.render();
+  groundPlane.renderFast();
 
-  var crate1 = new Cube();
-  crate1.color = [230/255, 232/255, 221/255, 1];
-  crate1.textureNum = 1;
-  crate1.matrix.translate(-55/100, -25/100, -25/100);
-  crate1.matrix.scale(50/100, 50/100, 45/100);
-  crate1.render();
+  drawWorld();
 
-  var crate2 = new Cube();
-  crate2.color = [230/255, 232/255, 221/255, 1];
-  crate2.textureNum = 2;
-  crate2.matrix.translate(5/100, -25/100, -25/100);
-  crate2.matrix.scale(50/100, 50/100, 45/100);
-  crate2.render();
-
-  var colorCube = new Cube();
-  colorCube.color = [230/255, 232/255, 221/255, 1];
-  colorCube.textureNum = -1;
-  colorCube.matrix.translate(-20/100, 25/100, -30/100);
-  colorCube.matrix.scale(50/100, 50/100, 45/100);
-  colorCube.render();
+  var clank1 = new Clank();
+  clank1.g_positionY = 1;
+  clank1.renderClank();
+  
+  var clank2 = new Clank();
+  clank2.g_positionY = 1;
+  clank2.g_positionZ = -2;
+  clank2.g_rotationY = 180;
+  clank2.renderClank();
 
   // Check the time at the end of the function, and show on the web page
   var duration = performance.now() - startTime;
@@ -385,6 +497,9 @@ function tick() {
   // Save the current time
   g_seconds = performance.now()/1000.0 - g_startTime;
   //console.log(g_seconds);
+
+  // Update animation angles
+  updateAnimationAngles()
 
   // Draw Everything
   renderAllShapes();
