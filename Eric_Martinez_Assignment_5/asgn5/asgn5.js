@@ -97,7 +97,7 @@ function main() {
 
     const portal3Texture = new THREE.CubeTextureLoader()
         .setPath('../lib/textures/jacquesSky/')
-        .load(['jacques-posX.png','jacques-negX.png','jacques-posY.png','jacques-negY.png','jacques-posZ.png','jacques-negZ.png']);
+        .load(['Jacques-posX.png','Jacques-negX.png','Jacques-posY.png','Jacques-negY.png','Jacques-posZ.png','Jacques-negZ.png']);
     skyBoxTextures.push(portal3Texture);
     nightSkyBoxTextures.push(portal3Texture);
     
@@ -429,7 +429,7 @@ function main() {
     const stone1TextureRepeat = stone1_repeat.load('../lib/textures/spyro1Stone1.png');
     
     const stone2_repeat = new THREE.TextureLoader();
-    const stone2TextureRepeat = stone2_repeat.load('../lib/textures/spyro1Stone2.png');
+    const stone2TextureRepeat = stone2_repeat.load('../lib/textures/spyro1stone2.png');
     
     // Cobble
     const cobble0_repeat = new THREE.TextureLoader();
