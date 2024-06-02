@@ -97,7 +97,7 @@ function main() {
 
     const portal3Texture = new THREE.CubeTextureLoader()
         .setPath('../lib/textures/jacquesSky/')
-        .load(['Jacques-posX.png','Jacques-negX.png','Jacques-posY.png','Jacques-negY.png','Jacques-posZ.png','Jacques-negZ.png']);
+        .load(['jacques-posX.png','jacques-negX.png','jacques-posY.png','jacques-negY.png','jacques-posZ.png','jacques-negZ.png']);
     skyBoxTextures.push(portal3Texture);
     nightSkyBoxTextures.push(portal3Texture);
     
