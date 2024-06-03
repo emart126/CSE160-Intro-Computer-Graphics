@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import * as holdEvent from "../lib/hold-event.js";
+import CameraControls from '../lib/camera-controls.js';
+CameraControls.install( { THREE: THREE } );
 import {OBJLoader} from '../lib/OBJLoader.js';
 import {OrbitControls} from '../lib/OrbitControls.js';
 import { GUI } from '../lib/lil-gui.esm.js';
@@ -53,6 +56,41 @@ function main() {
     portalScenes.push(portal3Scene);
     portalScenes.push(portal4Scene);
     portalScenes.push(portal5Scene);
+
+    // Custom Camera Controls ===========================================================
+    // Source Code: https://github.com/yomotsu/camera-controls
+    const cameraControls = new CameraControls( camera, renderer.domElement );
+    cameraControls.setLookAt(0, 3, 5, 0,3,0);
+    cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
+
+    const KEYCODE = {
+        W: 87,
+        A: 65,
+        S: 83,
+        D: 68,
+        ARROW_LEFT : 37,
+        ARROW_UP   : 38,
+        ARROW_RIGHT: 39,
+        ARROW_DOWN : 40,
+    };
+
+    const wKey = new holdEvent.KeyboardKeyHold( KEYCODE.W, 16.666 );
+    const aKey = new holdEvent.KeyboardKeyHold( KEYCODE.A, 16.666 );
+    const sKey = new holdEvent.KeyboardKeyHold( KEYCODE.S, 16.666 );
+    const dKey = new holdEvent.KeyboardKeyHold( KEYCODE.D, 16.666 );
+    aKey.addEventListener( 'holding', function( event ) { cameraControls.truck( - 0.01 * event.deltaTime, 0, false ) } );
+    dKey.addEventListener( 'holding', function( event ) { cameraControls.truck(   0.01 * event.deltaTime, 0, false ) } );
+    wKey.addEventListener( 'holding', function( event ) { cameraControls.forward(   0.01 * event.deltaTime, false ) } );
+    sKey.addEventListener( 'holding', function( event ) { cameraControls.forward( - 0.01 * event.deltaTime, false ) } );
+
+    const leftKey  = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_LEFT,  100 );
+    const rightKey = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_RIGHT, 100 );
+    const upKey    = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_UP,    100 );
+    const downKey  = new holdEvent.KeyboardKeyHold( KEYCODE.ARROW_DOWN,  100 );
+    leftKey.addEventListener ( 'holding', function( event ) { cameraControls.rotate( - 0.1 * THREE.MathUtils.DEG2RAD * event.deltaTime, 0, true ) } );
+    rightKey.addEventListener( 'holding', function( event ) { cameraControls.rotate(   0.1 * THREE.MathUtils.DEG2RAD * event.deltaTime, 0, true ) } );
+    upKey.addEventListener   ( 'holding', function( event ) { cameraControls.rotate( 0, - 0.05 * THREE.MathUtils.DEG2RAD * event.deltaTime, true ) } );
+    downKey.addEventListener ( 'holding', function( event ) { cameraControls.rotate( 0,   0.05 * THREE.MathUtils.DEG2RAD * event.deltaTime, true ) } );
 
     // GUI ==============================================================================
     const gui = new GUI();
@@ -1737,7 +1775,14 @@ function main() {
     var newDayOption;
     var currNightOption = guiParams.nightOptions;
     var newNightOption;
+    const clock = new THREE.Clock();
     function animate(time) {
+
+        // Camera
+        const delta = clock.getDelta();
+        const elapsed = clock.getElapsedTime();
+        const updated = cameraControls.update( delta );
+
         // Gems
         for (let i = 0; i < gemGroups.length; i++) {
             if (gemDirections[i] == 0) {
